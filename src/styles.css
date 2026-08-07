@@ -142,3 +142,67 @@
     color: var(--color-foreground);
   }
 }
+
+/* ── Mother's Day Lucky Wheel design system ───────────────────────── */
+:root {
+  --radius: 1rem;
+  --background: #f7f9fc;
+  --foreground: #0f1c3f;
+  --card: #ffffff;
+  --card-foreground: #0f1c3f;
+  --popover: #ffffff;
+  --popover-foreground: #0f1c3f;
+  --primary: #1e3a8a;
+  --primary-foreground: #ffffff;
+  --secondary: #eaf0fb;
+  --secondary-foreground: #16295c;
+  --muted: #eef2f9;
+  --muted-foreground: #5b6b8f;
+  --accent: #fdf6e3;
+  --accent-foreground: #6b5310;
+  --accent-gold: #c9a227;
+  --destructive: #b91c1c;
+  --destructive-foreground: #ffffff;
+  --border: #dfe6f3;
+  --input: #dfe6f3;
+  --ring: #1e3a8a;
+  --sidebar: #0f1c3f;
+  --sidebar-foreground: #e7edfb;
+  --sidebar-primary: #c9a227;
+  --sidebar-primary-foreground: #1a1405;
+  --sidebar-accent: #1b2c5c;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #23345f;
+  --sidebar-ring: #c9a227;
+}
+
+@theme inline {
+  --color-gold: var(--accent-gold);
+  --font-sans: "Noto Sans Thai", "Prompt", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Prompt", "Noto Sans Thai", ui-sans-serif, sans-serif;
+}
+
+body {
+  font-family: var(--font-sans);
+}
+
+@utility gold-text {
+  background: linear-gradient(100deg, #f4dd8b, var(--accent-gold) 45%, #f9ecb8);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@utility panel-hero {
+  background:
+    radial-gradient(1100px 520px at 15% -10%, color-mix(in oklab, var(--accent-gold) 26%, transparent), transparent 70%),
+    radial-gradient(900px 500px at 90% 10%, #2c4ba8, transparent 65%),
+    linear-gradient(160deg, #0d1836, #16295c 55%, #0d1836);
+}
+
+@utility card-soft {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 10px 30px -22px color-mix(in oklab, var(--primary) 55%, transparent);
+}
