@@ -13,7 +13,10 @@ const C = 210;
 
 const pt = (deg: number, r = R) => {
   const rad = (deg * Math.PI) / 180;
-  return [C + r * Math.cos(rad), C + r * Math.sin(rad)] as const;
+  return [
+    Number((C + r * Math.cos(rad)).toFixed(3)),
+    Number((C + r * Math.sin(rad)).toFixed(3)),
+  ] as const;
 };
 
 export function WheelCanvas({ prizes, angle, centerLogo, centerLogoSize, size = 460 }: Props) {
