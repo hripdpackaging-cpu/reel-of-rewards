@@ -6,7 +6,7 @@ export interface Prize {
   id: string;
   name: string;
   description: string;
-  image?: string;
+  image?: string | undefined;
   total: number;
   remaining: number;
   color: string;
@@ -35,10 +35,10 @@ export interface Wheel {
   eventName: string;
   randomMode: RandomMode;
   afterSpin: AfterSpin;
-  centerLogo?: string;
+  centerLogo?: string | undefined;
   centerLogoSize: number;
-  background?: string;
-  banner?: string;
+  background?: string | undefined;
+  banner?: string | undefined;
   spin: SpinSettings;
   prizes: Prize[];
   updatedAt: string;
@@ -52,7 +52,7 @@ export interface HistoryEntry {
   wheelName: string;
   prizeId: string;
   prizeName: string;
-  prizeImage?: string;
+  prizeImage?: string | undefined;
   at: string;
   operator: string;
   status: "confirmed" | "cancelled";
@@ -60,7 +60,7 @@ export interface HistoryEntry {
 }
 
 export interface AppSettings {
-  siteLogo?: string;
+  siteLogo?: string | undefined;
   brandName: string;
   eventName: string;
   operator: string;
