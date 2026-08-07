@@ -448,9 +448,7 @@ function PlayPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      {/* keep wheel reference used for settings sync */}
-      <span className="hidden" data-wheel-updated={wheel.updatedAt} onClick={() => updateWheel(wheel.id, {})} />
     </AppShell>
+
   );
 }
