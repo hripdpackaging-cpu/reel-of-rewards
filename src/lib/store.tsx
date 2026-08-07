@@ -258,6 +258,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     };
   }, [state, setState, ready]);
 
+  // Data lives in localStorage, so render children only after hydration to
+  // avoid server/client markup mismatches.
+  if (!ready) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="h-10 w-10 animate-spin rounded-full border-2 border-border border-t-primary" />
+      </div>
+    );
+  }
+
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
 }
 
