@@ -15,6 +15,14 @@ import { uid, useStore } from "@/lib/store";
 import { defaultSpin, PALETTE, type Prize, type Wheel } from "@/lib/types";
 
 export const Route = createFileRoute("/admin/import")({
+  head: () => ({
+    meta: [
+      { title: "นำเข้ารางวัลจาก Excel | Mother's Day Lucky Wheel" },
+      { name: "description", content: "อัปโหลดไฟล์ Excel เพื่อสร้างรายการรางวัลในวงล้อ พร้อมตรวจสอบข้อมูลซ้ำและดาวน์โหลดเทมเพลต" },
+      { property: "og:title", content: "นำเข้ารางวัลจาก Excel | Mother's Day Lucky Wheel" },
+      { property: "og:description", content: "อัปโหลดไฟล์ Excel เพื่อสร้างรายการรางวัลในวงล้อ พร้อมตรวจสอบข้อมูลซ้ำและดาวน์โหลดเทมเพลต" },
+    ],
+  }),
   component: ImportPage,
 });
 

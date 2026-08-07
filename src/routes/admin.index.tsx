@@ -12,6 +12,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useStore } from "@/lib/store";
 
 export const Route = createFileRoute("/admin/")({
+  head: () => ({
+    meta: [
+      { title: "แดชบอร์ดจัดการระบบ | Mother's Day Lucky Wheel" },
+      { name: "description", content: "ภาพรวมวงล้อ จำนวนรางวัลคงเหลือ การแจ้งเตือนสต็อก และประวัติการสุ่มล่าสุด" },
+      { property: "og:title", content: "แดชบอร์ดจัดการระบบ | Mother's Day Lucky Wheel" },
+      { property: "og:description", content: "ภาพรวมวงล้อ จำนวนรางวัลคงเหลือ การแจ้งเตือนสต็อก และประวัติการสุ่มล่าสุด" },
+    ],
+  }),
   component: Dashboard,
 });
 

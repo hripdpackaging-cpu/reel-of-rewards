@@ -29,6 +29,14 @@ import { useSpinner } from "@/lib/useSpinner";
 import type { AfterSpin, RandomMode, SpinMode, Wheel } from "@/lib/types";
 
 export const Route = createFileRoute("/admin/wheels")({
+  head: () => ({
+    meta: [
+      { title: "จัดการวงล้อรางวัล | Mother's Day Lucky Wheel" },
+      { name: "description", content: "สร้าง แก้ไข ทำสำเนา และลบวงล้อ พร้อมตั้งค่าเวลานับถอยหลังและระยะเวลาการหมุน" },
+      { property: "og:title", content: "จัดการวงล้อรางวัล | Mother's Day Lucky Wheel" },
+      { property: "og:description", content: "สร้าง แก้ไข ทำสำเนา และลบวงล้อ พร้อมตั้งค่าเวลานับถอยหลังและระยะเวลาการหมุน" },
+    ],
+  }),
   component: WheelsPage,
 });
 

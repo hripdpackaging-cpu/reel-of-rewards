@@ -24,6 +24,14 @@ import { useStore } from "@/lib/store";
 import { PALETTE, type Prize } from "@/lib/types";
 
 export const Route = createFileRoute("/admin/prizes")({
+  head: () => ({
+    meta: [
+      { title: "จัดการรางวัลในวงล้อ | Mother's Day Lucky Wheel" },
+      { name: "description", content: "เพิ่ม แก้ไข จัดลำดับ และกำหนดน้ำหนักความน่าจะเป็นของรางวัลในแต่ละวงล้อ" },
+      { property: "og:title", content: "จัดการรางวัลในวงล้อ | Mother's Day Lucky Wheel" },
+      { property: "og:description", content: "เพิ่ม แก้ไข จัดลำดับ และกำหนดน้ำหนักความน่าจะเป็นของรางวัลในแต่ละวงล้อ" },
+    ],
+  }),
   component: PrizesPage,
 });
 

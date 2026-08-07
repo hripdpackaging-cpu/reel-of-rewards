@@ -11,6 +11,14 @@ import { celebrate, fanfare } from "@/lib/media";
 import { useStore } from "@/lib/store";
 
 export const Route = createFileRoute("/admin/settings")({
+  head: () => ({
+    meta: [
+      { title: "ตั้งค่าระบบและแบรนด์ | Mother's Day Lucky Wheel" },
+      { name: "description", content: "ตั้งค่าชื่อกิจกรรม โลโก้บริษัท ชุดสี เสียงประกอบ และเอฟเฟกต์ฉลองของระบบสุ่มรางวัล" },
+      { property: "og:title", content: "ตั้งค่าระบบและแบรนด์ | Mother's Day Lucky Wheel" },
+      { property: "og:description", content: "ตั้งค่าชื่อกิจกรรม โลโก้บริษัท ชุดสี เสียงประกอบ และเอฟเฟกต์ฉลองของระบบสุ่มรางวัล" },
+    ],
+  }),
   component: SettingsPage,
 });
 

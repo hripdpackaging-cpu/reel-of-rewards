@@ -25,6 +25,14 @@ import { useStore } from "@/lib/store";
 import type { HistoryEntry } from "@/lib/types";
 
 export const Route = createFileRoute("/admin/history")({
+  head: () => ({
+    meta: [
+      { title: "ประวัติการสุ่มรางวัล | Mother's Day Lucky Wheel" },
+      { name: "description", content: "ดูประวัติการสุ่มรางวัลทั้งหมด ค้นหา กรองตามวงล้อและช่วงวันที่ ยกเลิกผล และ Export เป็นไฟล์ Excel" },
+      { property: "og:title", content: "ประวัติการสุ่มรางวัล | Mother's Day Lucky Wheel" },
+      { property: "og:description", content: "ดูประวัติการสุ่มรางวัลทั้งหมด ค้นหา กรองตามวงล้อและช่วงวันที่ ยกเลิกผล และ Export เป็นไฟล์ Excel" },
+    ],
+  }),
   component: HistoryPage,
 });
 
