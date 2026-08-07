@@ -329,7 +329,7 @@ function PlayPage() {
                     </SheetContent>
                   </Sheet>
                   <Button variant="secondary" size="sm" asChild>
-                    <Link to="/admin/wheels" search={{ wheel: wheel.id }}>
+                    <Link to="/admin/wheels">
                       <Settings2 className="mr-1.5 h-4 w-4" /> ตั้งค่าวงล้อ
                     </Link>
                   </Button>

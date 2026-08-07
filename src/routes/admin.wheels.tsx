@@ -58,7 +58,10 @@ function WheelsPage() {
           <Button
             onClick={() => {
               const name = newName.trim();
-              if (!name) return toast.error("กรุณาตั้งชื่อวงล้อ");
+              if (!name) {
+                toast.error("กรุณาตั้งชื่อวงล้อ");
+                return;
+              }
               const w = addWheel(name);
               setNewName("");
               setEditing(w.id);
