@@ -7,6 +7,7 @@ import {
   Minimize,
   Play,
   Settings2,
+  Sparkles,
   Square,
   Trash2,
   Volume2,
@@ -61,6 +62,12 @@ function PlayPage() {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [full, setFull] = useState(false);
   const stageRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const onChange = () => setFull(!!document.fullscreenElement);
+    document.addEventListener("fullscreenchange", onChange);
+    return () => document.removeEventListener("fullscreenchange", onChange);
+  }, []);
 
   const soundOn = state.settings.sound && (wheel?.spin.sound ?? true);
   const celebrationOn = state.settings.celebration && (wheel?.spin.celebration ?? true);
@@ -216,7 +223,7 @@ function PlayPage() {
                 <div className="pointer-events-none absolute inset-0 z-30 flex flex-col items-center justify-center rounded-full">
                   <span className="rounded-2xl bg-black/55 px-6 py-3 text-center">
                     <span className="block text-sm text-white/80">กำลังสุ่มรางวัล...</span>
-                    <span className="gold-text font-display text-6xl font-bold">
+                    <span className="font-display text-6xl font-bold text-gold">
                       {spinner.countdown}
                     </span>
                   </span>
@@ -287,11 +294,11 @@ function PlayPage() {
                 <div className="mt-4 grid grid-cols-2 gap-3 text-center">
                   <div className="rounded-lg bg-black/25 p-3">
                     <p className="text-xs text-white/70">รางวัลคงเหลือ</p>
-                    <p className="gold-text font-display text-2xl font-bold">{remainingTotal}</p>
+                    <p className="font-display text-2xl font-bold text-gold">{remainingTotal}</p>
                   </div>
                   <div className="rounded-lg bg-black/25 p-3">
                     <p className="text-xs text-white/70">สุ่มไปแล้ว</p>
-                    <p className="gold-text font-display text-2xl font-bold">{spinCount}</p>
+                    <p className="font-display text-2xl font-bold text-gold">{spinCount}</p>
                   </div>
                 </div>
                 <div className="mt-3 flex flex-wrap gap-2">
