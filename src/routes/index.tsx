@@ -192,11 +192,16 @@ function PlayPage() {
                 className="mx-auto mb-4 max-h-32 rounded-xl object-contain"
               />
             ) : null}
-            <p className="text-sm font-medium tracking-wide text-white/70">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3.5 py-1.5 text-xs font-medium tracking-wide text-white/85 backdrop-blur sm:text-sm">
+              <Sparkles className="h-3.5 w-3.5 text-gold" />
               {wheel.eventName || state.settings.eventName}
-            </p>
-            <h1 className="gold-text font-display text-3xl font-bold sm:text-5xl">{wheel.name}</h1>
+            </span>
+            <h1 className="mt-3 font-display text-3xl font-bold leading-tight text-gold drop-shadow-[0_3px_16px_rgba(0,0,0,0.45)] sm:text-5xl">
+              {wheel.name}
+            </h1>
+            <span className="mx-auto mt-3 block h-px w-28 bg-gradient-to-r from-transparent via-gold to-transparent" />
           </div>
+
 
           <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
             <div className="relative">
