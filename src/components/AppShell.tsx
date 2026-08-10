@@ -1,5 +1,7 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Crown, Sparkles } from "lucide-react";
+import { Cloud, CloudOff, Crown, LogIn, LogOut, RefreshCw, Sparkles } from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 import { useStore } from "@/lib/store";
 import type { ReactNode } from "react";
 
@@ -9,7 +11,7 @@ const links = [
 ];
 
 export function AppShell({ children }: { children: ReactNode }) {
-  const { state } = useStore();
+  const { state, user, signOut, syncing } = useStore();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   return (
@@ -54,13 +56,45 @@ export function AppShell({ children }: { children: ReactNode }) {
                 </Link>
               );
             })}
+            <span
+              className="ml-1 hidden items-center gap-1.5 rounded-lg border border-border px-2.5 py-2 text-xs text-muted-foreground md:flex"
+              title={user ? "ข้อมูลซิงก์กับคลาวด์" : "โหมดดูข้อมูล (ยังไม่เข้าสู่ระบบ)"}
+            >
+              {syncing ? (
+                <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+              ) : user ? (
+                <Cloud className="h-3.5 w-3.5" />
+              ) : (
+                <CloudOff className="h-3.5 w-3.5" />
+              )}
+              {syncing ? "กำลังบันทึก..." : user ? "ซิงก์เรียลไทม์" : "โหมดดูข้อมูล"}
+            </span>
+            {user ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={async () => {
+                  await signOut();
+                  toast.info("ออกจากระบบแล้ว");
+                }}
+              >
+                <LogOut className="mr-1.5 h-4 w-4" /> ออกจากระบบ
+              </Button>
+            ) : (
+              <Button variant="secondary" size="sm" asChild>
+                <Link to="/auth">
+                  <LogIn className="mr-1.5 h-4 w-4" /> เข้าสู่ระบบ
+                </Link>
+              </Button>
+            )}
           </nav>
         </div>
       </header>
       {children}
       <footer className="border-t border-border/70 py-6 text-center text-xs text-muted-foreground">
         <Sparkles className="mr-1 inline h-3.5 w-3.5 text-gold" />
-        {state.settings.brandName} · ข้อมูลถูกบันทึกไว้ในเครื่องนี้อัตโนมัติ
+        {state.settings.brandName} · ข้อมูลถูกบันทึกบนคลาวด์และซิงก์ให้ทุกบัญชีแบบเรียลไทม์
+        {user ? ` · ${user.email ?? "ผู้ดูแล"}` : ""}
       </footer>
     </div>
   );

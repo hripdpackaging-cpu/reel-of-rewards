@@ -1,5 +1,8 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
+import type { Session, User } from "@supabase/supabase-js";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import {
   defaultSpin,
   PALETTE,
@@ -10,73 +13,15 @@ import {
   type Wheel,
 } from "./types";
 
-const KEY = "prize-wheel-app-v1";
+const ROW_ID = "shared";
 
 export const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
 
-const mkPrize = (
-  name: string,
-  description: string,
-  total: number,
-  i: number,
-  weight = 1,
-): Prize => ({
-  id: uid(),
-  name,
-  description,
-  total,
-  remaining: total,
-  color: PALETTE[i % PALETTE.length]!,
-  order: i,
-  active: true,
-  weight,
-});
-
-function seed(): AppState {
-  const w1: Wheel = {
-    id: uid(),
-    name: "วงล้อกิจกรรมวันแม่ รอบที่ 1",
-    active: true,
-    eventName: "งานวันแม่แห่งชาติ 2569",
-    randomMode: "weighted",
-    afterSpin: "decrement",
-    centerLogoSize: 34,
-    centerLogo: undefined,
-    spin: defaultSpin(),
-    prizes: [
-      mkPrize("ช่อดอกมะลิพรีเมียม", "ช่อมะลิสดพร้อมการ์ดอวยพรวันแม่", 10, 0, 5),
-      mkPrize("บัตรกำนัล 500 บาท", "ใช้ได้ที่ร้านค้าในเครือ", 5, 1, 3),
-      mkPrize("ชุดสปาคุณแม่", "ชุดผลิตภัณฑ์ดูแลผิวสำหรับคุณแม่", 4, 2, 2),
-      mkPrize("กระเป๋าผ้าลายมะลิ", "กระเป๋าผ้าแคนวาสลายมะลิ", 12, 3, 6),
-      mkPrize("ตุ๊กตาหมีวันแม่", "ตุ๊กตาหมีพร้อมริบบิ้นสีฟ้า", 6, 4, 3),
-      mkPrize("ทองคำ 0.1 กรัม", "รางวัลใหญ่ประจำกิจกรรม", 1, 5, 1),
-    ],
-    updatedAt: new Date().toISOString(),
-    createdAt: new Date().toISOString(),
-  };
-  const w2: Wheel = {
-    id: uid(),
-    name: "วงล้อของรางวัลพิเศษ",
-    active: true,
-    eventName: "งานวันแม่แห่งชาติ 2569",
-    randomMode: "equal",
-    afterSpin: "decrement",
-    centerLogoSize: 34,
-    spin: { ...defaultSpin(), mode: "manual", duration: 15 },
-    prizes: [
-      mkPrize("หม้อทอดไร้น้ำมัน", "ขนาด 5 ลิตร", 2, 0),
-      mkPrize("พัดลมไอเย็น", "พร้อมรีโมท", 2, 1),
-      mkPrize("ชุดเครื่องนอน", "ผ้าปูที่นอน 6 ฟุต", 3, 2),
-      mkPrize("บัตรกำนัล 1,000 บาท", "ใช้ได้ทุกสาขา", 4, 3),
-      mkPrize("เค้กวันแม่", "เค้กมะลิโฮมเมด", 5, 4),
-    ],
-    updatedAt: new Date().toISOString(),
-    createdAt: new Date().toISOString(),
-  };
+function emptyState(): AppState {
   return {
-    wheels: [w1, w2],
+    wheels: [],
     history: [],
-    activeWheelId: w1.id,
+    activeWheelId: null,
     settings: {
       brandName: "Mother's Day Lucky Wheel",
       eventName: "งานวันแม่แห่งชาติ 2569",
@@ -89,48 +34,104 @@ function seed(): AppState {
   };
 }
 
+type Mutator = (s: AppState) => AppState;
+
 interface Ctx {
   state: AppState;
-  setState: (fn: (s: AppState) => AppState) => void;
+  /** Persists the change to the shared cloud database (all accounts stay in sync). */
+  setState: (fn: Mutator) => Promise<void>;
   ready: boolean;
+  syncing: boolean;
+  user: User | null;
+  signOut: () => Promise<void>;
   addWheel: (name: string) => Wheel;
-  updateWheel: (id: string, patch: Partial<Wheel>) => void;
-  duplicateWheel: (id: string) => void;
-  deleteWheel: (id: string) => void;
-  updatePrize: (wheelId: string, prizeId: string, patch: Partial<Prize>) => void;
-  addPrize: (wheelId: string, prize?: Partial<Prize>) => void;
-  deletePrize: (wheelId: string, prizeId: string) => void;
-  addHistory: (e: Omit<HistoryEntry, "id" | "seq">) => HistoryEntry;
-  cancelHistory: (id: string, restore: boolean) => void;
-  clearHistory: () => void;
-  updateSettings: (patch: Partial<AppSettings>) => void;
+  updateWheel: (id: string, patch: Partial<Wheel>) => Promise<void>;
+  duplicateWheel: (id: string) => Promise<void>;
+  deleteWheel: (id: string) => Promise<void>;
+  updatePrize: (wheelId: string, prizeId: string, patch: Partial<Prize>) => Promise<void>;
+  addPrize: (wheelId: string, prize?: Partial<Prize>) => Promise<void>;
+  deletePrize: (wheelId: string, prizeId: string) => Promise<void>;
+  addHistory: (e: Omit<HistoryEntry, "id" | "seq">) => Promise<void>;
+  cancelHistory: (id: string, restore: boolean) => Promise<void>;
+  clearHistory: () => Promise<void>;
+  updateSettings: (patch: Partial<AppSettings>) => Promise<void>;
 }
 
 const StoreContext = createContext<Ctx | null>(null);
 
-export function StoreProvider({ children }: { children: ReactNode }) {
-  const [state, setInternal] = useState<AppState>(() => seed());
-  const [ready, setReady] = useState(false);
+const touch = (w: Wheel): Wheel => ({ ...w, updatedAt: new Date().toISOString() });
 
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(KEY);
-      if (raw) setInternal(JSON.parse(raw) as AppState);
-    } catch {
-      /* ignore */
-    }
-    setReady(true);
+export function StoreProvider({ children }: { children: ReactNode }) {
+  const [state, setInternal] = useState<AppState>(() => emptyState());
+  const [ready, setReady] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+
+  const stateRef = useRef<AppState>(state);
+  const versionRef = useRef<number>(0);
+  const chainRef = useRef<Promise<unknown>>(Promise.resolve());
+
+  const apply = useCallback((next: AppState, version?: number) => {
+    stateRef.current = next;
+    if (typeof version === "number") versionRef.current = version;
+    setInternal(next);
   }, []);
 
+  // Auth session (shared editing requires a signed-in account)
   useEffect(() => {
-    if (!ready) return;
-    try {
-      localStorage.setItem(KEY, JSON.stringify(state));
-    } catch {
-      /* ignore */
-    }
-  }, [state, ready]);
+    let alive = true;
+    void supabase.auth.getSession().then(({ data }) => {
+      if (alive) setUser(data.session?.user ?? null);
+    });
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, session: Session | null) => {
+      setUser(session?.user ?? null);
+    });
+    return () => {
+      alive = false;
+      sub.subscription.unsubscribe();
+    };
+  }, []);
 
+  // Initial load + realtime sync
+  useEffect(() => {
+    let alive = true;
+    const load = async () => {
+      const { data, error } = await supabase
+        .from("app_state")
+        .select("data, version")
+        .eq("id", ROW_ID)
+        .maybeSingle();
+      if (!alive) return;
+      if (error) {
+        toast.error("โหลดข้อมูลจากคลาวด์ไม่สำเร็จ");
+      } else if (data) {
+        apply(data.data as unknown as AppState, Number(data.version));
+      }
+      setReady(true);
+    };
+    void load();
+
+    const channel = supabase
+      .channel("app-state-sync")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "app_state", filter: `id=eq.${ROW_ID}` },
+        (payload) => {
+          const row = payload.new as { data?: unknown; version?: number } | null;
+          if (!row?.data || typeof row.version !== "number") return;
+          if (row.version <= versionRef.current) return;
+          apply(row.data as AppState, row.version);
+        },
+      )
+      .subscribe();
+
+    return () => {
+      alive = false;
+      void supabase.removeChannel(channel);
+    };
+  }, [apply]);
+
+  // Theme tokens
   useEffect(() => {
     if (typeof document === "undefined") return;
     const root = document.documentElement;
@@ -139,9 +140,64 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     root.style.setProperty("--ring", state.settings.primaryColor);
   }, [state.settings.primaryColor, state.settings.accentColor]);
 
-  const setState = useCallback((fn: (s: AppState) => AppState) => setInternal(fn), []);
+  const setState = useCallback(
+    (fn: Mutator) => {
+      // optimistic local update for instant feedback
+      apply(fn(stateRef.current));
 
-  const touch = (w: Wheel): Wheel => ({ ...w, updatedAt: new Date().toISOString() });
+      const task = chainRef.current.then(async () => {
+        setSyncing(true);
+        try {
+          for (let attempt = 0; attempt < 6; attempt += 1) {
+            const { data: row, error } = await supabase
+              .from("app_state")
+              .select("data, version")
+              .eq("id", ROW_ID)
+              .maybeSingle();
+            if (error) throw error;
+            if (!row) throw new Error("ไม่พบข้อมูลกิจกรรมในคลาวด์");
+
+            const base = row.data as unknown as AppState;
+            const next = fn(base);
+            const { data: updated, error: updateError } = await supabase
+              .from("app_state")
+              .update({
+                data: next as unknown as never,
+                version: Number(row.version) + 1,
+                updated_at: new Date().toISOString(),
+              })
+              .eq("id", ROW_ID)
+              .eq("version", row.version)
+              .select("data, version")
+              .maybeSingle();
+            if (updateError) throw updateError;
+            if (updated) {
+              apply(updated.data as unknown as AppState, Number(updated.version));
+              return;
+            }
+            // Someone else saved first — reload and replay on top of their data.
+            await new Promise((r) => setTimeout(r, 120 + attempt * 150));
+          }
+          throw new Error("มีการแก้ไขจากเครื่องอื่นพร้อมกัน กรุณาลองบันทึกอีกครั้ง");
+        } catch (err) {
+          const raw = err instanceof Error ? err.message : String(err);
+          const denied = /row-level security|permission|JWT|not authorized/i.test(raw);
+          toast.error(denied ? "กรุณาเข้าสู่ระบบก่อนบันทึกข้อมูล" : raw);
+          const { data: row } = await supabase
+            .from("app_state")
+            .select("data, version")
+            .eq("id", ROW_ID)
+            .maybeSingle();
+          if (row) apply(row.data as unknown as AppState, Number(row.version));
+        } finally {
+          setSyncing(false);
+        }
+      });
+      chainRef.current = task;
+      return task;
+    },
+    [apply],
+  );
 
   const value = useMemo<Ctx>(() => {
     const mapWheel = (id: string, fn: (w: Wheel) => Wheel) =>
@@ -151,12 +207,17 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       state,
       setState,
       ready,
+      syncing,
+      user,
+      signOut: async () => {
+        await supabase.auth.signOut();
+      },
       addWheel: (name) => {
         const w: Wheel = {
           id: uid(),
           name,
           active: true,
-          eventName: state.settings.eventName,
+          eventName: stateRef.current.settings.eventName,
           randomMode: "equal",
           afterSpin: "decrement",
           centerLogoSize: 34,
@@ -165,7 +226,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         };
-        setState((s) => ({ ...s, wheels: [...s.wheels, w], activeWheelId: s.activeWheelId ?? w.id }));
+        void setState((s) => ({
+          ...s,
+          wheels: [...s.wheels, w],
+          activeWheelId: s.activeWheelId ?? w.id,
+        }));
         return w;
       },
       updateWheel: (id, patch) => mapWheel(id, (w) => ({ ...w, ...patch })),
@@ -197,13 +262,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           ...w,
           prizes: w.prizes.map((p) => (p.id === prizeId ? { ...p, ...patch } : p)),
         })),
-      addPrize: (wheelId, prize) =>
-        mapWheel(wheelId, (w) => ({
+      addPrize: (wheelId, prize) => {
+        const id = uid();
+        return mapWheel(wheelId, (w) => ({
           ...w,
           prizes: [
             ...w.prizes,
             {
-              id: uid(),
+              id,
               name: prize?.name ?? "รางวัลใหม่",
               description: prize?.description ?? "",
               image: prize?.image,
@@ -215,13 +281,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
               weight: prize?.weight ?? 1,
             },
           ],
-        })),
+        }));
+      },
       deletePrize: (wheelId, prizeId) =>
         mapWheel(wheelId, (w) => ({ ...w, prizes: w.prizes.filter((p) => p.id !== prizeId) })),
       addHistory: (e) => {
-        const entry: HistoryEntry = { ...e, id: uid(), seq: state.history.length + 1 };
-        setState((s) => ({ ...s, history: [{ ...entry, seq: s.history.length + 1 }, ...s.history] }));
-        return entry;
+        const id = uid();
+        return setState((s) => ({
+          ...s,
+          history: [{ ...e, id, seq: s.history.length + 1 }, ...s.history],
+        }));
       },
       cancelHistory: (id, restore) =>
         setState((s) => {
@@ -256,14 +325,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       updateSettings: (patch) =>
         setState((s) => ({ ...s, settings: { ...s.settings, ...patch } })),
     };
-  }, [state, setState, ready]);
+  }, [state, setState, ready, syncing, user]);
 
-  // Data lives in localStorage, so render children only after hydration to
-  // avoid server/client markup mismatches.
   if (!ready) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
+      <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-background">
         <div className="h-10 w-10 animate-spin rounded-full border-2 border-border border-t-primary" />
+        <p className="text-sm text-muted-foreground">กำลังเชื่อมต่อข้อมูลกิจกรรม...</p>
       </div>
     );
   }

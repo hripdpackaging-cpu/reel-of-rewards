@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
   History as HistoryIcon,
@@ -7,6 +7,7 @@ import {
   Minimize,
   Play,
   Settings2,
+  Sparkles,
   Square,
   Trash2,
   Volume2,
@@ -61,6 +62,12 @@ function PlayPage() {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [full, setFull] = useState(false);
   const stageRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const onChange = () => setFull(!!document.fullscreenElement);
+    document.addEventListener("fullscreenchange", onChange);
+    return () => document.removeEventListener("fullscreenchange", onChange);
+  }, []);
 
   const soundOn = state.settings.sound && (wheel?.spin.sound ?? true);
   const celebrationOn = state.settings.celebration && (wheel?.spin.celebration ?? true);
@@ -161,16 +168,14 @@ function PlayPage() {
   };
 
   const toggleFullscreen = async () => {
-    const el = stageRef.current;
-    if (!el) return;
+    // Fullscreen the whole document so dialogs/toasts (rendered in <body>) stay visible.
     if (document.fullscreenElement) {
-      await document.exitFullscreen();
-      setFull(false);
+      await document.exitFullscreen().catch(() => undefined);
     } else {
-      await el.requestFullscreen().catch(() => undefined);
-      setFull(true);
+      await document.documentElement.requestFullscreen().catch(() => undefined);
     }
   };
+
 
   const remainingPrize = (id: string) => wheel.prizes.find((p) => p.id === id)?.remaining ?? 0;
 
@@ -194,11 +199,16 @@ function PlayPage() {
                 className="mx-auto mb-4 max-h-32 rounded-xl object-contain"
               />
             ) : null}
-            <p className="text-sm font-medium tracking-wide text-white/70">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3.5 py-1.5 text-xs font-medium tracking-wide text-white/85 backdrop-blur sm:text-sm">
+              <Sparkles className="h-3.5 w-3.5 text-gold" />
               {wheel.eventName || state.settings.eventName}
-            </p>
-            <h1 className="gold-text font-display text-3xl font-bold sm:text-5xl">{wheel.name}</h1>
+            </span>
+            <h1 className="mt-3 font-display text-3xl font-bold leading-tight text-gold drop-shadow-[0_3px_16px_rgba(0,0,0,0.45)] sm:text-5xl">
+              {wheel.name}
+            </h1>
+            <span className="mx-auto mt-3 block h-px w-28 bg-gradient-to-r from-transparent via-gold to-transparent" />
           </div>
+
 
           <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
             <div className="relative">
@@ -213,7 +223,7 @@ function PlayPage() {
                 <div className="pointer-events-none absolute inset-0 z-30 flex flex-col items-center justify-center rounded-full">
                   <span className="rounded-2xl bg-black/55 px-6 py-3 text-center">
                     <span className="block text-sm text-white/80">กำลังสุ่มรางวัล...</span>
-                    <span className="gold-text font-display text-6xl font-bold">
+                    <span className="font-display text-6xl font-bold text-gold">
                       {spinner.countdown}
                     </span>
                   </span>
@@ -284,11 +294,11 @@ function PlayPage() {
                 <div className="mt-4 grid grid-cols-2 gap-3 text-center">
                   <div className="rounded-lg bg-black/25 p-3">
                     <p className="text-xs text-white/70">รางวัลคงเหลือ</p>
-                    <p className="gold-text font-display text-2xl font-bold">{remainingTotal}</p>
+                    <p className="font-display text-2xl font-bold text-gold">{remainingTotal}</p>
                   </div>
                   <div className="rounded-lg bg-black/25 p-3">
                     <p className="text-xs text-white/70">สุ่มไปแล้ว</p>
-                    <p className="gold-text font-display text-2xl font-bold">{spinCount}</p>
+                    <p className="font-display text-2xl font-bold text-gold">{spinCount}</p>
                   </div>
                 </div>
                 <div className="mt-3 flex flex-wrap gap-2">

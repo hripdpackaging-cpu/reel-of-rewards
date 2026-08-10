@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Copy, Pencil, Plus, Trash2 } from "lucide-react";
+import { Copy, Pencil, Plus, Save, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -192,11 +192,28 @@ function WheelsPage() {
 }
 
 function WheelEditor({ wheel }: { wheel: Wheel }) {
-  const { updateWheel, state } = useStore();
-  const set = (patch: Partial<Wheel>) => updateWheel(wheel.id, patch);
-  const setSpin = (patch: Partial<Wheel["spin"]>) => set({ spin: { ...wheel.spin, ...patch } });
-  const pool = spinnablePrizes(wheel);
-  const spinner = useSpinner(wheel.spin, state.settings.sound && wheel.spin.sound);
+  const { updateWheel, state, syncing } = useStore();
+  const [draft, setDraft] = useState<Wheel>(wheel);
+  useEffect(() => {
+    setDraft(wheel);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [wheel.id]);
+
+  const set = (patch: Partial<Wheel>) => setDraft((d) => ({ ...d, ...patch }));
+  const setSpin = (patch: Partial<Wheel["spin"]>) =>
+    setDraft((d) => ({ ...d, spin: { ...d.spin, ...patch } }));
+  const dirty = JSON.stringify(draft) !== JSON.stringify(wheel);
+  const pool = spinnablePrizes(draft);
+  const spinner = useSpinner(draft.spin, state.settings.sound && draft.spin.sound);
+
+  const save = async () => {
+    const { id, createdAt, updatedAt, ...patch } = draft;
+    void id;
+    void createdAt;
+    void updatedAt;
+    await updateWheel(wheel.id, patch);
+    toast.success("บันทึกการตั้งค่าวงล้อแล้ว");
+  };
 
   return (
     <Tabs defaultValue="general">
@@ -210,19 +227,19 @@ function WheelEditor({ wheel }: { wheel: Wheel }) {
         <div className="grid gap-3 sm:grid-cols-2">
           <div>
             <Label>ชื่อวงล้อ</Label>
-            <Input value={wheel.name} onChange={(e) => set({ name: e.target.value })} className="mt-1.5" />
+            <Input value={draft.name} onChange={(e) => set({ name: e.target.value })} className="mt-1.5" />
           </div>
           <div>
             <Label>ชื่อกิจกรรม / แบนเนอร์ข้อความ</Label>
             <Input
-              value={wheel.eventName}
+              value={draft.eventName}
               onChange={(e) => set({ eventName: e.target.value })}
               className="mt-1.5"
             />
           </div>
           <div>
             <Label>วิธีการสุ่ม</Label>
-            <Select value={wheel.randomMode} onValueChange={(v) => set({ randomMode: v as RandomMode })}>
+            <Select value={draft.randomMode} onValueChange={(v) => set({ randomMode: v as RandomMode })}>
               <SelectTrigger className="mt-1.5">
                 <SelectValue />
               </SelectTrigger>
@@ -234,7 +251,7 @@ function WheelEditor({ wheel }: { wheel: Wheel }) {
           </div>
           <div>
             <Label>การจัดการรางวัลหลังสุ่ม</Label>
-            <Select value={wheel.afterSpin} onValueChange={(v) => set({ afterSpin: v as AfterSpin })}>
+            <Select value={draft.afterSpin} onValueChange={(v) => set({ afterSpin: v as AfterSpin })}>
               <SelectTrigger className="mt-1.5">
                 <SelectValue />
               </SelectTrigger>
@@ -247,7 +264,7 @@ function WheelEditor({ wheel }: { wheel: Wheel }) {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Switch checked={wheel.active} onCheckedChange={(v) => set({ active: v })} />
+          <Switch checked={draft.active} onCheckedChange={(v) => set({ active: v })} />
           <Label>เปิดใช้งานวงล้อนี้</Label>
         </div>
       </TabsContent>
@@ -255,15 +272,15 @@ function WheelEditor({ wheel }: { wheel: Wheel }) {
       <TabsContent value="images" className="space-y-5 pt-4">
         <ImageUploader
           label="โลโก้ / ตราบริษัทตรงกลางวงล้อ"
-          value={wheel.centerLogo}
+          value={draft.centerLogo}
           onChange={(v) => set(v ? { centerLogo: v } : { centerLogo: undefined })}
           hint="JPG, JPEG, PNG, WebP"
         />
         <div>
-          <Label>ขนาดโลโก้กลางวงล้อ ({wheel.centerLogoSize}%)</Label>
+          <Label>ขนาดโลโก้กลางวงล้อ ({draft.centerLogoSize}%)</Label>
           <Slider
             className="mt-3"
-            value={[wheel.centerLogoSize]}
+            value={[draft.centerLogoSize]}
             min={12}
             max={60}
             step={1}
@@ -272,12 +289,12 @@ function WheelEditor({ wheel }: { wheel: Wheel }) {
         </div>
         <ImageUploader
           label="รูปพื้นหลังหน้าวงล้อ"
-          value={wheel.background}
+          value={draft.background}
           onChange={(v) => set(v ? { background: v } : { background: undefined })}
         />
         <ImageUploader
           label="แบนเนอร์กิจกรรม"
-          value={wheel.banner}
+          value={draft.banner}
           onChange={(v) => set(v ? { banner: v } : { banner: undefined })}
         />
       </TabsContent>
@@ -286,7 +303,7 @@ function WheelEditor({ wheel }: { wheel: Wheel }) {
         <div className="grid gap-3 sm:grid-cols-2">
           <div>
             <Label>Spin Mode</Label>
-            <Select value={wheel.spin.mode} onValueChange={(v) => setSpin({ mode: v as SpinMode })}>
+            <Select value={draft.spin.mode} onValueChange={(v) => setSpin({ mode: v as SpinMode })}>
               <SelectTrigger className="mt-1.5">
                 <SelectValue />
               </SelectTrigger>
@@ -304,7 +321,7 @@ function WheelEditor({ wheel }: { wheel: Wheel }) {
                   key={d}
                   type="button"
                   size="sm"
-                  variant={wheel.spin.duration === d ? "default" : "secondary"}
+                  variant={draft.spin.duration === d ? "default" : "secondary"}
                   onClick={() => setSpin({ duration: d })}
                 >
                   {d}s
@@ -314,7 +331,7 @@ function WheelEditor({ wheel }: { wheel: Wheel }) {
                 type="number"
                 min={1}
                 max={120}
-                value={wheel.spin.duration}
+                value={draft.spin.duration}
                 onChange={(e) => setSpin({ duration: Math.max(1, Number(e.target.value) || 1) })}
                 className="w-24"
               />
@@ -325,7 +342,7 @@ function WheelEditor({ wheel }: { wheel: Wheel }) {
             <Input
               type="number"
               min={1}
-              value={wheel.spin.minRotations}
+              value={draft.spin.minRotations}
               onChange={(e) => setSpin({ minRotations: Math.max(1, Number(e.target.value) || 1) })}
               className="mt-1.5"
             />
@@ -334,7 +351,7 @@ function WheelEditor({ wheel }: { wheel: Wheel }) {
             <Label>Initial Speed (องศา/วินาที)</Label>
             <Input
               type="number"
-              value={wheel.spin.initialSpeed}
+              value={draft.spin.initialSpeed}
               onChange={(e) => setSpin({ initialSpeed: Number(e.target.value) || 0 })}
               className="mt-1.5"
             />
@@ -343,7 +360,7 @@ function WheelEditor({ wheel }: { wheel: Wheel }) {
             <Label>Maximum Speed (องศา/วินาที)</Label>
             <Input
               type="number"
-              value={wheel.spin.maxSpeed}
+              value={draft.spin.maxSpeed}
               onChange={(e) => setSpin({ maxSpeed: Number(e.target.value) || 0 })}
               className="mt-1.5"
             />
@@ -352,7 +369,7 @@ function WheelEditor({ wheel }: { wheel: Wheel }) {
             <Label>Acceleration</Label>
             <Input
               type="number"
-              value={wheel.spin.acceleration}
+              value={draft.spin.acceleration}
               onChange={(e) => setSpin({ acceleration: Number(e.target.value) || 0 })}
               className="mt-1.5"
             />
@@ -361,7 +378,7 @@ function WheelEditor({ wheel }: { wheel: Wheel }) {
             <Label>Deceleration</Label>
             <Input
               type="number"
-              value={wheel.spin.deceleration}
+              value={draft.spin.deceleration}
               onChange={(e) => setSpin({ deceleration: Number(e.target.value) || 0 })}
               className="mt-1.5"
             />
@@ -377,7 +394,7 @@ function WheelEditor({ wheel }: { wheel: Wheel }) {
             ] as const
           ).map(([key, label]) => (
             <div key={key} className="flex items-center gap-2 rounded-lg border border-border p-3">
-              <Switch checked={wheel.spin[key]} onCheckedChange={(v) => setSpin({ [key]: v })} />
+              <Switch checked={draft.spin[key]} onCheckedChange={(v) => setSpin({ [key]: v })} />
               <Label className="text-sm">{label}</Label>
             </div>
           ))}
@@ -399,7 +416,7 @@ function WheelEditor({ wheel }: { wheel: Wheel }) {
               <Button
                 size="sm"
                 variant="secondary"
-                disabled={wheel.spin.mode !== "manual" || spinner.phase !== "spinning"}
+                disabled={draft.spin.mode !== "manual" || spinner.phase !== "spinning"}
                 onClick={spinner.requestStop}
               >
                 หยุด
@@ -410,8 +427,8 @@ function WheelEditor({ wheel }: { wheel: Wheel }) {
             <WheelCanvas
               prizes={pool}
               angle={spinner.angle}
-              centerLogo={wheel.centerLogo}
-              centerLogoSize={wheel.centerLogoSize}
+              centerLogo={draft.centerLogo}
+              centerLogoSize={draft.centerLogoSize}
               size={260}
             />
             {spinner.countdown !== null && (
@@ -422,6 +439,20 @@ function WheelEditor({ wheel }: { wheel: Wheel }) {
           </div>
         </div>
       </TabsContent>
+
+      <div className="sticky bottom-0 -mx-1 mt-4 flex flex-wrap items-center justify-end gap-2 border-t border-border bg-card/95 px-1 py-3 backdrop-blur">
+        {dirty ? (
+          <span className="mr-auto text-xs font-medium text-destructive">มีการแก้ไขที่ยังไม่ได้บันทึก</span>
+        ) : (
+          <span className="mr-auto text-xs text-muted-foreground">บันทึกข้อมูลล่าสุดแล้ว</span>
+        )}
+        <Button variant="secondary" onClick={() => setDraft(wheel)} disabled={!dirty || syncing}>
+          ยกเลิกการแก้ไข
+        </Button>
+        <Button onClick={save} disabled={!dirty || syncing}>
+          <Save className="mr-1.5 h-4 w-4" /> {syncing ? "กำลังบันทึก..." : "บันทึกการเปลี่ยนแปลง"}
+        </Button>
+      </div>
     </Tabs>
   );
 }
