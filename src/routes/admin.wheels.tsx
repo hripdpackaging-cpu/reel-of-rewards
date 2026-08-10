@@ -196,7 +196,9 @@ function WheelEditor({ wheel }: { wheel: Wheel }) {
   const [draft, setDraft] = useState<Wheel>(wheel);
   useEffect(() => {
     setDraft(wheel);
-  }, [draft.id]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [wheel.id]);
+
   const set = (patch: Partial<Wheel>) => setDraft((d) => ({ ...d, ...patch }));
   const setSpin = (patch: Partial<Wheel["spin"]>) =>
     setDraft((d) => ({ ...d, spin: { ...d.spin, ...patch } }));
