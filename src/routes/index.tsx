@@ -161,16 +161,14 @@ function PlayPage() {
   };
 
   const toggleFullscreen = async () => {
-    const el = stageRef.current;
-    if (!el) return;
+    // Fullscreen the whole document so dialogs/toasts (rendered in <body>) stay visible.
     if (document.fullscreenElement) {
-      await document.exitFullscreen();
-      setFull(false);
+      await document.exitFullscreen().catch(() => undefined);
     } else {
-      await el.requestFullscreen().catch(() => undefined);
-      setFull(true);
+      await document.documentElement.requestFullscreen().catch(() => undefined);
     }
   };
+
 
   const remainingPrize = (id: string) => wheel.prizes.find((p) => p.id === id)?.remaining ?? 0;
 
