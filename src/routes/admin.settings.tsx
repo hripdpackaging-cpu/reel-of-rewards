@@ -1,4 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { Save } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,8 +33,19 @@ const THEMES = [
 ];
 
 function SettingsPage() {
-  const { state, updateSettings } = useStore();
-  const s = state.settings;
+  const { state, updateSettings, syncing } = useStore();
+  const [draft, setDraft] = useState(state.settings);
+  useEffect(() => {
+    setDraft(state.settings);
+  }, [state.settings]);
+  const s = draft;
+  const updateSettingsDraft = (patch: Partial<typeof draft>) =>
+    setDraft((d) => ({ ...d, ...patch }));
+  const dirty = JSON.stringify(draft) !== JSON.stringify(state.settings);
+  const save = async () => {
+    await updateSettings(draft);
+    toast.success("บันทึกการตั้งค่าแล้ว");
+  };
 
   return (
     <div className="space-y-5">
@@ -62,7 +75,7 @@ function SettingsPage() {
                   <Input
                     className="mt-1.5"
                     value={s.brandName}
-                    onChange={(e) => updateSettings({ brandName: e.target.value })}
+                    onChange={(e) => updateSettingsDraft({ brandName: e.target.value })}
                   />
                 </div>
                 <div>
@@ -70,7 +83,7 @@ function SettingsPage() {
                   <Input
                     className="mt-1.5"
                     value={s.eventName}
-                    onChange={(e) => updateSettings({ eventName: e.target.value })}
+                    onChange={(e) => updateSettingsDraft({ eventName: e.target.value })}
                   />
                 </div>
                 <div>
@@ -78,7 +91,7 @@ function SettingsPage() {
                   <Input
                     className="mt-1.5"
                     value={s.operator}
-                    onChange={(e) => updateSettings({ operator: e.target.value })}
+                    onChange={(e) => updateSettingsDraft({ operator: e.target.value })}
                   />
                 </div>
               </div>
@@ -90,7 +103,7 @@ function SettingsPage() {
                     <button
                       key={t.name}
                       type="button"
-                      onClick={() => updateSettings({ primaryColor: t.primary, accentColor: t.accent })}
+                      onClick={() => updateSettingsDraft({ primaryColor: t.primary, accentColor: t.accent })}
                       className="flex items-center gap-2 rounded-full border border-border bg-card px-3 py-2 text-sm hover:bg-secondary"
                     >
                       <span className="h-4 w-4 rounded-full" style={{ backgroundColor: t.primary }} />
@@ -108,7 +121,7 @@ function SettingsPage() {
                     type="color"
                     className="mt-1.5 h-11 w-24 p-1"
                     value={s.primaryColor}
-                    onChange={(e) => updateSettings({ primaryColor: e.target.value })}
+                    onChange={(e) => updateSettingsDraft({ primaryColor: e.target.value })}
                   />
                 </div>
                 <div>
@@ -117,7 +130,7 @@ function SettingsPage() {
                     type="color"
                     className="mt-1.5 h-11 w-24 p-1"
                     value={s.accentColor}
-                    onChange={(e) => updateSettings({ accentColor: e.target.value })}
+                    onChange={(e) => updateSettingsDraft({ accentColor: e.target.value })}
                   />
                 </div>
               </div>
@@ -135,7 +148,7 @@ function SettingsPage() {
                 label="โลโก้ / ตราบริษัท (ส่วนหัว)"
                 hint="รองรับ JPG, JPEG, PNG, WebP"
                 value={s.siteLogo}
-                onChange={(v) => updateSettings(v ? { siteLogo: v } : { siteLogo: undefined })}
+                onChange={(v) => updateSettingsDraft(v ? { siteLogo: v } : { siteLogo: undefined })}
               />
               <p className="text-sm text-muted-foreground">
                 โลโก้กลางวงล้อ รูปพื้นหลัง และแบนเนอร์ ตั้งค่าแยกได้ในแต่ละวงล้อที่หน้า “จัดการวงล้อ”
@@ -155,7 +168,7 @@ function SettingsPage() {
                   <p className="text-sm font-medium">เสียงประกอบ</p>
                   <p className="text-xs text-muted-foreground">เสียงหมุนวงล้อและเสียงแสดงความยินดี</p>
                 </div>
-                <Switch checked={s.sound} onCheckedChange={(v) => updateSettings({ sound: v })} />
+                <Switch checked={s.sound} onCheckedChange={(v) => updateSettingsDraft({ sound: v })} />
               </div>
               <div className="flex items-center justify-between rounded-lg border border-border p-3">
                 <div>
@@ -164,7 +177,7 @@ function SettingsPage() {
                 </div>
                 <Switch
                   checked={s.celebration}
-                  onCheckedChange={(v) => updateSettings({ celebration: v })}
+                  onCheckedChange={(v) => updateSettingsDraft({ celebration: v })}
                 />
               </div>
               <div className="flex gap-2">
@@ -188,6 +201,20 @@ function SettingsPage() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <div className="sticky bottom-0 flex flex-wrap items-center justify-end gap-2 border-t border-border bg-background/95 py-3 backdrop-blur">
+        {dirty ? (
+          <span className="mr-auto text-xs font-medium text-destructive">มีการแก้ไขที่ยังไม่ได้บันทึก</span>
+        ) : (
+          <span className="mr-auto text-xs text-muted-foreground">บันทึกข้อมูลล่าสุดแล้ว</span>
+        )}
+        <Button variant="secondary" onClick={() => setDraft(state.settings)} disabled={!dirty || syncing}>
+          ยกเลิกการแก้ไข
+        </Button>
+        <Button onClick={save} disabled={!dirty || syncing}>
+          <Save className="mr-1.5 h-4 w-4" /> {syncing ? "กำลังบันทึก..." : "บันทึกการตั้งค่า"}
+        </Button>
+      </div>
     </div>
   );
 }
