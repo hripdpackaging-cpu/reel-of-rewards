@@ -312,7 +312,9 @@ function PlayPage() {
                 <div className="mt-4 grid grid-cols-2 gap-3 text-center">
                   <div className="rounded-lg bg-black/25 p-3">
                     <p className="text-xs text-white/70">รางวัลคงเหลือ</p>
-                    <p className="font-display text-2xl font-bold text-gold">{remainingTotal}</p>
+                    <p className="font-display text-2xl font-bold text-gold">
+                      {showRemaining ? remainingTotal : "—"}
+                    </p>
                   </div>
                   <div className="rounded-lg bg-black/25 p-3">
                     <p className="text-xs text-white/70">สุ่มไปแล้ว</p>
@@ -374,7 +376,9 @@ function PlayPage() {
                         style={{ backgroundColor: p.color }}
                       />
                       <span className="min-w-0 flex-1 truncate text-sm text-white">{p.name}</span>
-                      <span className="text-xs font-semibold text-gold">เหลือ {p.remaining}</span>
+                      {showRemaining && (
+                        <span className="text-xs font-semibold text-gold">เหลือ {p.remaining}</span>
+                      )}
                     </div>
                   ))}
                   {pool.length === 0 && (
