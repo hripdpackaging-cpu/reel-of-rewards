@@ -267,6 +267,9 @@ function PlayPage() {
                     <Eye className="h-5 w-5" />
                   )}
                 </Button>
+                <Button size="lg" variant="secondary" className="h-14" onClick={toggleFullscreen}>
+                  {full ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}
+                </Button>
                 <Button
                   size="lg"
                   variant="secondary"
