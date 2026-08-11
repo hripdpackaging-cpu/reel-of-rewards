@@ -221,6 +221,7 @@ function PlayPage() {
                 centerLogo={wheel.centerLogo}
                 centerLogoSize={wheel.centerLogoSize}
                 size={520}
+                showRemaining={showRemaining}
               />
               {spinner.countdown !== null && (
                 <div className="pointer-events-none absolute inset-0 z-30 flex flex-col items-center justify-center rounded-full">
