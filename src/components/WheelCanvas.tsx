@@ -6,6 +6,7 @@ interface Props {
   centerLogo?: string | undefined;
   centerLogoSize: number;
   size?: number;
+  showRemaining?: boolean;
 }
 
 const R = 200;
@@ -19,7 +20,14 @@ const pt = (deg: number, r = R) => {
   ] as const;
 };
 
-export function WheelCanvas({ prizes, angle, centerLogo, centerLogoSize, size = 460 }: Props) {
+export function WheelCanvas({
+  prizes,
+  angle,
+  centerLogo,
+  centerLogoSize,
+  size = 460,
+  showRemaining = true,
+}: Props) {
   const n = prizes.length;
   const seg = n > 0 ? 360 / n : 360;
   const logoR = (Math.max(12, Math.min(60, centerLogoSize)) / 100) * R;
@@ -102,31 +110,32 @@ export function WheelCanvas({ prizes, angle, centerLogo, centerLogoSize, size = 
                     </text>
                   )}
                   {/* remaining count overlay */}
-                  <g transform={`translate(${C + R * 0.3} ${C})`}>
-                    <rect
-                      x={-24}
-                      y={-10}
-                      width={48}
-                      height={20}
-                      rx={10}
-                      fill="rgba(15,28,63,0.72)"
-                      stroke="var(--accent-gold)"
-                      strokeWidth={1}
-                    />
-                    <text
-                      x={0}
-                      y={0}
-                      textAnchor="middle"
-                      dominantBaseline="middle"
-                      fill="#f4dd8b"
-                      fontSize={11}
-                      fontWeight={700}
-                    >
-                      เหลือ {p.remaining}
-                    </text>
-                  </g>
+                  {showRemaining && (
+                    <g transform={`translate(${C + R * 0.3} ${C})`}>
+                      <rect
+                        x={-24}
+                        y={-10}
+                        width={48}
+                        height={20}
+                        rx={10}
+                        fill="rgba(15,28,63,0.72)"
+                        stroke="var(--accent-gold)"
+                        strokeWidth={1}
+                      />
+                      <text
+                        x={0}
+                        y={0}
+                        textAnchor="middle"
+                        dominantBaseline="middle"
+                        fill="#f4dd8b"
+                        fontSize={11}
+                        fontWeight={700}
+                      >
+                        เหลือ {p.remaining}
+                      </text>
+                    </g>
+                  )}
                 </g>
-
               </g>
             );
           })}
