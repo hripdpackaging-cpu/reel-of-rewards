@@ -416,7 +416,9 @@ function PlayPage() {
                 )}
                 <div className="mt-3 grid grid-cols-3 gap-2 text-xs text-muted-foreground">
                   <div>
-                    <p className="font-semibold text-foreground">{remainingPrize(result.prize.id)}</p>
+                    <p className="font-semibold text-foreground">
+                      {showRemaining ? remainingPrize(result.prize.id) : "—"}
+                    </p>
                     คงเหลือ
                   </div>
                   <div>
