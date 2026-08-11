@@ -134,6 +134,18 @@ function SettingsPage() {
                   />
                 </div>
               </div>
+              <div className="flex items-center justify-between rounded-lg border border-border p-3">
+                <div>
+                  <p className="text-sm font-medium">แสดงจำนวนคงเหลือ</p>
+                  <p className="text-xs text-muted-foreground">
+                    แสดงจำนวนรางวัลที่เหลืออยู่บนวงล้อและในสรุปรางวัล
+                  </p>
+                </div>
+                <Switch
+                  checked={s.showRemaining ?? true}
+                  onCheckedChange={(v) => updateSettingsDraft({ showRemaining: v })}
+                />
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
