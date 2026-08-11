@@ -30,6 +30,7 @@ function emptyState(): AppState {
       accentColor: "#c9a227",
       sound: true,
       celebration: true,
+      showRemaining: true,
     },
   };
 }

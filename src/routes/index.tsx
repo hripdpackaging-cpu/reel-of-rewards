@@ -2,6 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
+  Eye,
+  EyeOff,
   History as HistoryIcon,
   Maximize,
   Minimize,
@@ -55,7 +57,7 @@ export const Route = createFileRoute("/")({
 });
 
 function PlayPage() {
-  const { state, setState, updateWheel, updatePrize, deletePrize, addHistory } = useStore();
+  const { state, setState, updateWheel, updatePrize, deletePrize, addHistory, updateSettings } = useStore();
   const wheels = state.wheels.filter((w) => w.active);
   const wheel = state.wheels.find((w) => w.id === state.activeWheelId) ?? wheels[0] ?? state.wheels[0] ?? null;
   const [result, setResult] = useState<{ prize: Prize; at: string; round: number } | null>(null);
@@ -88,6 +90,9 @@ function PlayPage() {
   );
 
   const pool = useMemo(() => (wheel ? spinnablePrizes(wheel) : []), [wheel]);
+  const showRemainingSetting = state.settings.showRemaining ?? true;
+  const [showRemaining, setShowRemaining] = useState(showRemainingSetting);
+  useEffect(() => setShowRemaining(showRemainingSetting), [showRemainingSetting]);
   const remainingTotal = pool.reduce((s, p) => s + p.remaining, 0);
   const wheelHistory = state.history.filter((h) => h.wheelId === wheel?.id);
   const spinCount = wheelHistory.filter((h) => h.status === "confirmed").length;
@@ -218,6 +223,7 @@ function PlayPage() {
                 centerLogo={wheel.centerLogo}
                 centerLogoSize={wheel.centerLogoSize}
                 size={520}
+                showRemaining={showRemaining}
               />
               {spinner.countdown !== null && (
                 <div className="pointer-events-none absolute inset-0 z-30 flex flex-col items-center justify-center rounded-full">
@@ -248,6 +254,20 @@ function PlayPage() {
                   disabled={wheel.spin.mode !== "manual" || spinner.phase !== "spinning"}
                 >
                   <Square className="mr-1.5 h-5 w-5" /> หยุด
+                </Button>
+                <Button
+                  size="lg"
+                  variant="secondary"
+                  className="h-14"
+                  aria-label={showRemaining ? "ซ่อนจำนวนคงเหลือ" : "แสดงจำนวนคงเหลือ"}
+                  title={showRemaining ? "ซ่อนจำนวนคงเหลือ" : "แสดงจำนวนคงเหลือ"}
+                  onClick={() => setShowRemaining((v) => !v)}
+                >
+                  {showRemaining ? (
+                    <EyeOff className="h-5 w-5" />
+                  ) : (
+                    <Eye className="h-5 w-5" />
+                  )}
                 </Button>
                 <Button size="lg" variant="secondary" className="h-14" onClick={toggleFullscreen}>
                   {full ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}
@@ -294,7 +314,9 @@ function PlayPage() {
                 <div className="mt-4 grid grid-cols-2 gap-3 text-center">
                   <div className="rounded-lg bg-black/25 p-3">
                     <p className="text-xs text-white/70">รางวัลคงเหลือ</p>
-                    <p className="font-display text-2xl font-bold text-gold">{remainingTotal}</p>
+                    <p className="font-display text-2xl font-bold text-gold">
+                      {showRemaining ? remainingTotal : "—"}
+                    </p>
                   </div>
                   <div className="rounded-lg bg-black/25 p-3">
                     <p className="text-xs text-white/70">สุ่มไปแล้ว</p>
@@ -356,7 +378,9 @@ function PlayPage() {
                         style={{ backgroundColor: p.color }}
                       />
                       <span className="min-w-0 flex-1 truncate text-sm text-white">{p.name}</span>
-                      <span className="text-xs font-semibold text-gold">เหลือ {p.remaining}</span>
+                      {showRemaining && (
+                        <span className="text-xs font-semibold text-gold">เหลือ {p.remaining}</span>
+                      )}
                     </div>
                   ))}
                   {pool.length === 0 && (
@@ -392,7 +416,9 @@ function PlayPage() {
                 )}
                 <div className="mt-3 grid grid-cols-3 gap-2 text-xs text-muted-foreground">
                   <div>
-                    <p className="font-semibold text-foreground">{remainingPrize(result.prize.id)}</p>
+                    <p className="font-semibold text-foreground">
+                      {showRemaining ? remainingPrize(result.prize.id) : "—"}
+                    </p>
                     คงเหลือ
                   </div>
                   <div>

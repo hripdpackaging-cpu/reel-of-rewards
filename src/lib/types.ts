@@ -68,6 +68,7 @@ export interface AppSettings {
   accentColor: string;
   sound: boolean;
   celebration: boolean;
+  showRemaining: boolean;
 }
 
 export interface AppState {
