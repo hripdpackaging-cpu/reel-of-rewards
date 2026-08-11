@@ -253,8 +253,19 @@ function PlayPage() {
                 >
                   <Square className="mr-1.5 h-5 w-5" /> หยุด
                 </Button>
-                <Button size="lg" variant="secondary" className="h-14" onClick={toggleFullscreen}>
-                  {full ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}
+                <Button
+                  size="lg"
+                  variant="secondary"
+                  className="h-14"
+                  aria-label={showRemaining ? "ซ่อนจำนวนคงเหลือ" : "แสดงจำนวนคงเหลือ"}
+                  title={showRemaining ? "ซ่อนจำนวนคงเหลือ" : "แสดงจำนวนคงเหลือ"}
+                  onClick={() => updateSettings({ showRemaining: !showRemaining })}
+                >
+                  {showRemaining ? (
+                    <EyeOff className="h-5 w-5" />
+                  ) : (
+                    <Eye className="h-5 w-5" />
+                  )}
                 </Button>
                 <Button
                   size="lg"
