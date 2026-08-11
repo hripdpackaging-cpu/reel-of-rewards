@@ -261,7 +261,7 @@ function PlayPage() {
                   className="h-14"
                   aria-label={showRemaining ? "ซ่อนจำนวนคงเหลือ" : "แสดงจำนวนคงเหลือ"}
                   title={showRemaining ? "ซ่อนจำนวนคงเหลือ" : "แสดงจำนวนคงเหลือ"}
-                  onClick={() => updateSettings({ showRemaining: !showRemaining })}
+                  onClick={() => setShowRemaining((v) => !v)}
                 >
                   {showRemaining ? (
                     <EyeOff className="h-5 w-5" />
