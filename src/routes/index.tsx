@@ -57,7 +57,7 @@ export const Route = createFileRoute("/")({
 });
 
 function PlayPage() {
-  const { state, setState, updateWheel, updatePrize, deletePrize, addHistory } = useStore();
+  const { state, setState, updateWheel, updatePrize, deletePrize, addHistory, updateSettings } = useStore();
   const wheels = state.wheels.filter((w) => w.active);
   const wheel = state.wheels.find((w) => w.id === state.activeWheelId) ?? wheels[0] ?? state.wheels[0] ?? null;
   const [result, setResult] = useState<{ prize: Prize; at: string; round: number } | null>(null);
