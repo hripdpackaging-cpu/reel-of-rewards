@@ -90,7 +90,9 @@ function PlayPage() {
   );
 
   const pool = useMemo(() => (wheel ? spinnablePrizes(wheel) : []), [wheel]);
-  const showRemaining = state.settings.showRemaining ?? true;
+  const showRemainingSetting = state.settings.showRemaining ?? true;
+  const [showRemaining, setShowRemaining] = useState(showRemainingSetting);
+  useEffect(() => setShowRemaining(showRemainingSetting), [showRemainingSetting]);
   const remainingTotal = pool.reduce((s, p) => s + p.remaining, 0);
   const wheelHistory = state.history.filter((h) => h.wheelId === wheel?.id);
   const spinCount = wheelHistory.filter((h) => h.status === "confirmed").length;
