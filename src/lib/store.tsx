@@ -148,7 +148,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       const task = chainRef.current.then(async () => {
         setSyncing(true);
         try {
-          for (let attempt = 0; attempt < 6; attempt += 1) {
+          const { data: sessionData } = await supabase.auth.getSession();
+          if (!sessionData.session) {
+            throw new Error("กรุณาเข้าสู่ระบบก่อนบันทึกข้อมูล");
+          }
+
+          for (let attempt = 0; attempt < 10; attempt += 1) {
             const { data: row, error } = await supabase
               .from("app_state")
               .select("data, version")
@@ -175,8 +180,21 @@ export function StoreProvider({ children }: { children: ReactNode }) {
               apply(updated.data as unknown as AppState, Number(updated.version));
               return;
             }
+
+            // No row came back: either another device saved first (version moved)
+            // or the write was blocked. Check which one it is before retrying.
+            const { data: check } = await supabase
+              .from("app_state")
+              .select("version")
+              .eq("id", ROW_ID)
+              .maybeSingle();
+            if (check && Number(check.version) === Number(row.version)) {
+              throw new Error(
+                "บันทึกไม่สำเร็จ: สิทธิ์การแก้ไขถูกปฏิเสธ กรุณาเข้าสู่ระบบใหม่แล้วลองอีกครั้ง",
+              );
+            }
             // Someone else saved first — reload and replay on top of their data.
-            await new Promise((r) => setTimeout(r, 120 + attempt * 150));
+            await new Promise((r) => setTimeout(r, 100 + attempt * 120));
           }
           throw new Error("มีการแก้ไขจากเครื่องอื่นพร้อมกัน กรุณาลองบันทึกอีกครั้ง");
         } catch (err) {
@@ -193,6 +211,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           setSyncing(false);
         }
       });
+
       chainRef.current = task;
       return task;
     },
